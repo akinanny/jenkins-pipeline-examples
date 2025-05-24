@@ -1,0 +1,12 @@
+pipeline {
+    agent any
+    stages {
+        stage('Deploy') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig-secret']) {
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                }
+            }
+        }
+    }
+}

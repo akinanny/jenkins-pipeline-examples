@@ -1,0 +1,13 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'USERNAME', defaultValue: 'guest', description: 'User name')
+    }
+    stages {
+        stage('Welcome') {
+            steps {
+                echo "Hello, ${params.USERNAME}!"
+            }
+        }
+    }
+}
