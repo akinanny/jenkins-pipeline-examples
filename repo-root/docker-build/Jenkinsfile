@@ -1,26 +1,31 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:20.10.24-dind'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+  agent {
+    docker {
+      image 'docker:20.10.24-dind'
+      args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
     }
-    environment {
-        DOCKER_IMAGE = 'ghcr.io/akinanny/python_mysql_expose:latest'
+  }
+  environment {
+    DOCKER_IMAGE = 'ghcr.io/akinanny/python_mysql_expose:latest'
+  }
+  stages {
+    stage('Check') {
+      steps {
+        sh 'docker version'
+      }
     }
-    stages {
-        stage('Build') {
-            steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
-            }
-        }
-        stage('Push') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE'
-                }
-            }
-        }
+    stage('Build') {
+      steps {
+        sh 'docker build -t $DOCKER_IMAGE .'
+      }
     }
+    stage('Push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+          sh 'echo $PASS | docker login -u $USER --password-stdin'
+          sh 'docker push $DOCKER_IMAGE'
+        }
+      }
+    }
+  }
 }
