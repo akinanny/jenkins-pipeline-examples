@@ -13,11 +13,15 @@ podTemplate(containers: [
       }
 
       stage('Install') {
-        sh 'pip install -r requirements.txt'
+        dir('repo-root/python-app') {
+          sh 'pip install -r requirements.txt'
+        }
       }
 
       stage('Test') {
-        sh 'pytest tests/' // optional, if you have a tests/ folder
+        dir('repo-root/python-app') {
+          sh 'pytest tests/' // if tests exist
+        }
       }
     }
   }
