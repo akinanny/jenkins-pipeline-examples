@@ -1,29 +1,22 @@
 pipeline {
-  agent {
-    docker {
-      image 'docker:20.10.24-dind'
-      args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-    }
-  }
+  agent any
   environment {
     DOCKER_IMAGE = 'ghcr.io/akinanny/python_mysql_expose:latest'
   }
   stages {
-    stage('Check') {
+    stage('Build with Kaniko') {
       steps {
-        sh 'docker version'
-      }
-    }
-    stage('Build') {
-      steps {
-        sh 'docker build -t $DOCKER_IMAGE .'
-      }
-    }
-    stage('Push') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-          sh 'echo $PASS | docker login -u $USER --password-stdin'
-          sh 'docker push $DOCKER_IMAGE'
+        container('kaniko') {
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+            sh '''
+              echo "{\"auths\":{\"ghcr.io\":{\"username\":\"$USER\",\"password\":\"$PASS\"}}}" > /kaniko/.docker/config.json
+              /kaniko/executor \
+                --context `pwd` \
+                --dockerfile `pwd`/Dockerfile \
+                --destination=$DOCKER_IMAGE \
+                --skip-tls-verify
+            '''
+          }
         }
       }
     }
