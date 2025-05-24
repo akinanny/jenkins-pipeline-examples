@@ -17,7 +17,7 @@ podTemplate(containers: [
       }
 
       stage('Test') {
-        sh 'pytest tests/'
+        sh 'pytest tests/' // optional, if you have a tests/ folder
       }
     }
   }
