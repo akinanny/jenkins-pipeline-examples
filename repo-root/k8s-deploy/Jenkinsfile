@@ -1,12 +1,24 @@
-pipeline {
-    agent any
-    stages {
-        stage('Deploy') {
-            steps {
-                withKubeConfig([credentialsId: 'kubeconfig-secret']) {
-                    sh 'kubectl apply -f k8s/deployment.yaml'
-                }
-            }
-        }
+podTemplate(
+  containers: [
+    containerTemplate(
+      name: 'kubectl',
+      image: 'bitnami/kubectl:latest',
+      command: 'cat',
+      ttyEnabled: true,
+      volumeMounts: [
+        volumeMount(mountPath: '/root/.kube', name: 'kubeconfig')
+      ]
+    )
+  ],
+  volumes: [
+    secretVolume(secretName: 'kubeconfig-secret', mountPath: '/root/.kube')
+  ]
+) {
+  node(POD_LABEL) {
+    container('kubectl') {
+      stage('K8s Deploy') {
+        sh 'kubectl get pods' // or kubectl apply ...
+      }
     }
+  }
 }
